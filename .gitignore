@@ -1,0 +1,20 @@
+# Python virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# ML artifacts (we may add later)
+model.pkl
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Frontend (future)
+node_modules/
+.next/
+
+# Environment variables
+.env

@@ -3,6 +3,8 @@ from pydantic import BaseModel
 import numpy as np
 import joblib
 import os
+import shap
+
 
 # ---------------------------
 # App Initialization
@@ -18,6 +20,20 @@ app = FastAPI(
 # ---------------------------
 MODEL_PATH = os.path.join("model", "model.pkl")
 model = joblib.load(MODEL_PATH)
+
+# ---------------------------
+# SHAP Explainer (STEP 3D.3)
+# ---------------------------
+explainer = shap.TreeExplainer(model)
+
+FEATURE_NAMES = [
+    "age",
+    "monthly_income",
+    "employment_type",
+    "digital_txn_count",
+    "bill_payment_score",
+    "mobile_usage_score"
+]
 
 # ---------------------------
 # Request Schema (STEP 3C.1)
@@ -67,7 +83,6 @@ def health_check():
 # ---------------------------
 @app.post("/predict")
 def predict_credit(data: CreditRequest):
-    # Convert request data to ML input format
     features = np.array([[
         data.age,
         data.monthly_income,
@@ -77,10 +92,8 @@ def predict_credit(data: CreditRequest):
         data.mobile_usage_score
     ]])
 
-    # Predict repayment probability
     repayment_probability = model.predict_proba(features)[0][1]
 
-    # Business decisions
     credit_score = calculate_credit_score(repayment_probability)
     risk_level = classify_risk(repayment_probability)
     loan_amount = recommend_loan_amount(risk_level, data.monthly_income)
@@ -90,4 +103,32 @@ def predict_credit(data: CreditRequest):
         "credit_score": credit_score,
         "risk_level": risk_level,
         "loan_amount": loan_amount
+    }
+
+# ---------------------------
+# Explainable AI Endpoint (STEP 3D.4)
+# ---------------------------
+@app.post("/explain")
+def explain_credit_decision(data: CreditRequest):
+    features = np.array([[
+        data.age,
+        data.monthly_income,
+        data.employment_type,
+        data.digital_txn_count,
+        data.bill_payment_score,
+        data.mobile_usage_score
+    ]])
+
+    shap_values = explainer.shap_values(features)
+
+    # Binary classification → use positive class (index 1)
+    contributions = shap_values[1][0]
+
+    explanation = {
+        feature: round(float(value), 4)
+        for feature, value in zip(FEATURE_NAMES, contributions)
+    }
+
+    return {
+        "feature_contributions": explanation
     }

@@ -39,3 +39,4 @@ print(classification_report(y_test, y_pred))
 # Save trained model
 joblib.dump(model, "model.pkl")
 print("\n✅ Model saved as model.pkl")
+ 

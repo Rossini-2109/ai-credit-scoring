@@ -1,9 +1,10 @@
 import Hero from "@/components/Hero";
-
+import Features from "@/components/Features";
 export default function Home() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Hero />
+      <Features />
 
       {/* Social Impact Section */}
       <section className="py-16 text-center px-6">
